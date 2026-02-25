@@ -6,19 +6,22 @@
 <title>Pizzaria Bella Massa</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
-body{background:#f5f5f5;padding:20px;}
-h1{text-align:center;margin-bottom:20px;}
+body{background:#121212;color:#fff;padding:20px;}
+h1,h2,h3{margin-bottom:15px;}
+h1{text-align:center;color:#e63946;}
 .hidden{display:none;}
 .container{max-width:1000px;margin:auto;}
-.card{background:white;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);margin-bottom:20px;}
+.card{background:#1e1e1e;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.5);margin-bottom:20px;}
 button{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;background:#e63946;color:white;margin-top:5px;}
-input,select,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ccc;}
-.pizza{border-bottom:1px solid #eee;padding:10px 0;}
-.cart-item{border-bottom:1px solid #ddd;padding:8px 0;}
+input,select,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #444;background:#2c2c2c;color:white;}
+input::placeholder,textarea::placeholder{color:#aaa;}
+.pizza{border-bottom:1px solid #333;padding:10px 0;}
+.cart-item{border-bottom:1px solid #444;padding:8px 0;}
 .total{font-weight:bold;margin-top:10px;}
-.admin-pedido{border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:10px;background:#fafafa;}
+.admin-pedido{border:1px solid #444;padding:10px;border-radius:8px;margin-bottom:10px;background:#222;}
 #loginBox button.google{background:#4285f4;}
 .toggle-link{color:#e63946;cursor:pointer;text-decoration:underline;margin-top:10px;display:inline-block;}
+.pix-info{background:#2c2c2c;padding:10px;border-radius:8px;margin:10px 0;border:1px solid #e63946;}
 </style>
 </head>
 <body>
@@ -93,19 +96,26 @@ input,select,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;bor
 <input type="text" id="telefone" placeholder="Telefone">
 <input type="text" id="endereco" placeholder="Endereço">
 <textarea id="obs" placeholder="Observação"></textarea>
-<select id="pagamento">
+<select id="pagamento" onchange="mostrarPix()">
 <option value="">Forma de pagamento</option>
 <option value="Pix">Pix</option>
 <option value="Cartão">Cartão</option>
 <option value="Dinheiro">Dinheiro</option>
 </select>
+
+<div id="pixDiv" class="hidden pix-info">
+<p>Chave Pix: <strong>12345678900</strong></p>
+<input type="file" id="pixComprovante" accept="image/*">
+<p style="font-size:12px;">Envie o comprovante para finalizar o pedido.</p>
+</div>
+
 <button onclick="confirmarPedido()">Confirmar Pedido</button>
 </div>
 
 <!-- ADMIN -->
 <div id="adminArea" class="hidden container">
 <div class="card">
-<h2>Painel de Pedidos</h2>
+<h2>Painel de Pedidos do Dia</h2>
 <div id="listaPedidos"></div>
 <button onclick="logout()">Sair</button>
 </div>
@@ -114,7 +124,7 @@ input,select,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;bor
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 // 🔥 Firebase config
 const firebaseConfig = {
@@ -125,28 +135,22 @@ const firebaseConfig = {
     messagingSenderId: "684388458766",
     appId: "1:684388458766:web:0181eee4647e02a277f75f",
     measurementId: "G-DV8XJX072V"
-  };
-
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Admin fixo
 const admins = ["gabriel.96052@aluno.iffar.edu.br","admin2@email.com"];
-
-// Carrinho
 let cart = [];
 let total = 0;
 
-// 🔹 Toggle login / signup
 window.toggleForm = function(){
   document.getElementById("loginForm").classList.toggle("hidden");
   document.getElementById("signupForm").classList.toggle("hidden");
 }
 
-// 🔹 Signup email
 window.signupEmail = async function(){
   const email = document.getElementById("emailSignup").value;
   const senha = document.getElementById("senhaSignup").value;
@@ -157,7 +161,6 @@ window.signupEmail = async function(){
   }catch(e){alert(e.message);}
 }
 
-// 🔹 Login email
 window.loginEmail = async function(){
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
@@ -168,13 +171,10 @@ window.loginEmail = async function(){
   }catch(e){
     if(e.code==="auth/user-not-found"){
       alert("Usuário não encontrado! Cadastre-se ou use Google.");
-    } else {
-      alert(e.message);
-    }
+    } else { alert(e.message);}
   }
 }
 
-// 🔹 Login Google
 window.loginGoogle = async function(){
   try{
     const result = await signInWithPopup(auth, provider);
@@ -184,7 +184,6 @@ window.loginGoogle = async function(){
   }catch(e){alert(e.message);}
 }
 
-// 🔹 Verifica admin ou cliente
 window.verificarAdmin = function(email){
   document.getElementById("loginBox").classList.add("hidden");
   if(admins.includes(email)){
@@ -195,15 +194,9 @@ window.verificarAdmin = function(email){
   }
 }
 
-// 🔹 OnAuthStateChanged para manter login
-onAuthStateChanged(auth,(user)=>{
-  if(user){ verificarAdmin(user.email); }
-});
-
-// 🔹 Logout
+onAuthStateChanged(auth,(user)=>{ if(user){ verificarAdmin(user.email); } });
 window.logout = function(){ signOut(auth); location.reload(); }
 
-// 🔹 Carrinho
 window.addToCart = function(nome,sizeId,qtyId){
   let price = parseFloat(document.getElementById(sizeId).value);
   let qty = parseInt(document.getElementById(qtyId).value);
@@ -223,24 +216,36 @@ function updateCart(){
   document.getElementById("total").innerText = total;
 }
 
-// 🔹 Finalizar pedido
 window.abrirFinalizacao = function(){
   if(cart.length===0){alert("Carrinho vazio"); return;}
   document.getElementById("finalizacao").classList.remove("hidden");
 }
 
+window.mostrarPix = function(){
+  const pagamento = document.getElementById("pagamento").value;
+  const pixDiv = document.getElementById("pixDiv");
+  pixDiv.classList.add("hidden");
+  if(pagamento==="Pix") pixDiv.classList.remove("hidden");
+}
+
 window.confirmarPedido = async function(){
+  const pagamento = document.getElementById("pagamento").value;
+  if(pagamento==="Pix"){
+    const comprovante = document.getElementById("pixComprovante").files[0];
+    if(!comprovante){ alert("Envie o comprovante Pix antes de finalizar."); return; }
+  }
+
   const pedido = {
     clienteEmail: auth.currentUser.email,
     nome: document.getElementById("nome").value,
     telefone: document.getElementById("telefone").value,
     endereco: document.getElementById("endereco").value,
     obs: document.getElementById("obs").value,
-    pagamento: document.getElementById("pagamento").value,
+    pagamento: pagamento,
     itens: cart,
     total: total,
-    status: "Recebido",
-    data: new Date()
+    status: pagamento==="Pix"?"Aguardando Pix":"Recebido",
+    data: Timestamp.now()
   };
   await addDoc(collection(db,"pedidos"),pedido);
   alert("Pedido enviado!");
@@ -248,10 +253,11 @@ window.confirmarPedido = async function(){
   document.getElementById("finalizacao").classList.add("hidden");
 }
 
-// 🔹 Admin
 async function carregarPedidos(){
   const lista = document.getElementById("listaPedidos");
   lista.innerHTML = "";
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
   const q = query(collection(db,"pedidos"), orderBy("data","desc"));
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach((docSnap)=>{
@@ -260,11 +266,13 @@ async function carregarPedidos(){
     lista.innerHTML += `
     <div class="admin-pedido">
       <strong>${p.nome}</strong><br>
+      Email: ${p.clienteEmail}<br>
       Telefone: ${p.telefone}<br>
       Endereço: ${p.endereco}<br>
       Pagamento: ${p.pagamento}<br>
       Total: R$ ${p.total}<br>
       Status: <span id="status-${docId}">${p.status}</span><br>
+      ${p.pagamento==="Pix"?`<button onclick="confirmPix('${docId}')">Confirmar Pix</button>`:""}
       <button onclick="mudarStatus('${docId}','Em preparo')">Em preparo</button>
       <button onclick="mudarStatus('${docId}','Saiu para entrega')">Saiu para entrega</button>
       <button onclick="mudarStatus('${docId}','Entregue')">Entregue</button>
@@ -272,10 +280,16 @@ async function carregarPedidos(){
   });
 }
 
-// 🔹 Mudar status
 window.mudarStatus = async function(docId,status){
   await updateDoc(doc(db,"pedidos",docId),{status: status});
   document.getElementById("status-"+docId).innerText = status;
+}
+
+// Confirmar pagamento Pix
+window.confirmPix = async function(docId){
+  await updateDoc(doc(db,"pedidos",docId),{status:"Recebido"});
+  document.getElementById("status-"+docId).innerText = "Recebido";
+  alert("Pagamento Pix confirmado!");
 }
 
 </script>
