@@ -1,296 +1,346 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pizzaria Bella Massa</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
-body{background:#121212;color:#fff;padding:20px;}
-h1,h2,h3{margin-bottom:15px;}
-h1{text-align:center;color:#e63946;}
-.hidden{display:none;}
-.container{max-width:1000px;margin:auto;}
-.card{background:#1e1e1e;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.5);margin-bottom:20px;}
-button{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;background:#e63946;color:white;margin-top:5px;}
-input,select,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #444;background:#2c2c2c;color:white;}
-input::placeholder,textarea::placeholder{color:#aaa;}
-.pizza{border-bottom:1px solid #333;padding:10px 0;}
-.cart-item{border-bottom:1px solid #444;padding:8px 0;}
-.total{font-weight:bold;margin-top:10px;}
-.admin-pedido{border:1px solid #444;padding:10px;border-radius:8px;margin-bottom:10px;background:#222;}
-#loginBox button.google{background:#4285f4;}
-.toggle-link{color:#e63946;cursor:pointer;text-decoration:underline;margin-top:10px;display:inline-block;}
-.pix-info{background:#2c2c2c;padding:10px;border-radius:8px;margin:10px 0;border:1px solid #e63946;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bella Massa | Gestão Profissional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e63946;
+            --dark: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --info: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--dark); color: var(--text); line-height: 1.6; }
+        .container { max-width: 1100px; margin: auto; padding: 20px; }
+        .hidden { display: none !important; }
+
+        /* Componentes UI */
+        .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { border: 1px solid var(--text-muted); background: transparent; color: var(--text); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; 
+            border: 1px solid #334155; background: #0f172a; color: white; 
+        }
+
+        /* Badge Status */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .bg-warning { background: var(--warning); color: #000; }
+        .bg-info { background: var(--info); color: white; }
+        .bg-success { background: var(--success); color: white; }
+
+        /* Admin Layout */
+        .admin-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-item { background: var(--card); padding: 15px; border-radius: 10px; text-align: center; border-bottom: 3px solid var(--primary); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; padding: 12px; color: var(--text-muted); border-bottom: 2px solid #334155; }
+        td { padding: 12px; border-bottom: 1px solid #334155; }
+
+        /* Menu de Pizza */
+        .pizza-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #334155; }
+        
+        /* Modal Comprovante */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 15px; max-width: 450px; width: 90%; }
+        
+        #loginBox { max-width: 400px; margin: 100px auto; text-align: center; }
+    </style>
 </head>
 <body>
 
-<h1>🍕 Bella Massa</h1>
+    <div class="container">
+        <div id="loginBox" class="card">
+            <h1 style="color: var(--primary); font-size: 2.5rem; margin-bottom: 10px;">🍕 Bella Massa</h1>
+            <div id="loginForm">
+                <input type="email" id="email" placeholder="E-mail">
+                <input type="password" id="senha" placeholder="Senha">
+                <button class="btn btn-primary" style="width: 100%;" onclick="loginEmail()">Entrar</button>
+                <p style="margin-top:15px; font-size: 0.9rem; color: var(--text-muted)">Acesso exclusivo para clientes e admin</p>
+            </div>
+        </div>
 
-<!-- LOGIN / CADASTRO -->
-<div id="loginBox" class="card">
-<h2 id="loginTitle">Login</h2>
+        <div id="clienteArea" class="hidden">
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2>Olá, <span id="userName" style="color:var(--primary)">Cliente</span></h2>
+                <button class="btn btn-outline" onclick="logout()">Sair</button>
+            </header>
 
-<div id="loginForm">
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="senha" placeholder="Senha">
-<button onclick="loginEmail()">Entrar</button>
-<p>ou</p>
-<button class="google" onclick="loginGoogle()">Entrar com Google</button>
-<p class="toggle-link" onclick="toggleForm()">Não tem conta? Cadastre-se</p>
-</div>
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 20px;">
+                <div>
+                    <div class="card">
+                        <h3>🍕 Cardápio</h3>
+                        <div class="pizza-item">
+                            <div><strong>Calabresa</strong><br><small>Molho, mussarela e calabresa</small></div>
+                            <div>
+                                <select id="size1" style="width: auto;"><option value="40">Média - R$ 40</option><option value="55">Grande - R$ 55</option></select>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart('Calabresa','size1')">Add</button>
+                            </div>
+                        </div>
+                        <div class="pizza-item">
+                            <div><strong>Frango Catupiry</strong><br><small>Frango desfiado e catupiry real</small></div>
+                            <div>
+                                <select id="size2" style="width: auto;"><option value="45">Média - R$ 45</option><option value="60">Grande - R$ 60</option></select>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart('Frango','size2')">Add</button>
+                            </div>
+                        </div>
+                    </div>
 
-<div id="signupForm" class="hidden">
-<input type="email" id="emailSignup" placeholder="Email">
-<input type="password" id="senhaSignup" placeholder="Senha">
-<button onclick="signupEmail()">Criar Conta</button>
-<p>ou</p>
-<button class="google" onclick="loginGoogle()">Continuar com Google</button>
-<p class="toggle-link" onclick="toggleForm()">Já tem conta? Faça login</p>
-</div>
-</div>
+                    <div class="card">
+                        <h3>📋 Meus Pedidos</h3>
+                        <div id="meusPedidosLista"></div>
+                    </div>
+                </div>
 
-<!-- CLIENTE -->
-<div id="clienteArea" class="hidden container">
-<div class="card">
-<h2>Cardápio</h2>
+                <aside>
+                    <div class="card">
+                        <h3>🛒 Carrinho</h3>
+                        <div id="cartContent"></div>
+                        <hr style="margin: 15px 0; opacity: 0.1;">
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
+                            <span>Total:</span> <span id="cartTotal">R$ 0,00</span>
+                        </div>
+                        <button class="btn btn-success" style="width: 100%; margin-top: 15px;" onclick="abrirCheckout()">Finalizar Pedido</button>
+                    </div>
+                </aside>
+            </div>
+        </div>
 
-<div class="pizza">
-<h3>Calabresa</h3>
-<select id="size1">
-<option value="30">Pequena - 30</option>
-<option value="40">Média - 40</option>
-<option value="50">Grande - 50</option>
-</select>
-<input type="number" id="qty1" value="1" min="1">
-<button onclick="addToCart('Calabresa','size1','qty1')">Adicionar</button>
-</div>
+        <div id="adminArea" class="hidden">
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>Painel do Chef 👨‍🍳</h1>
+                <button class="btn btn-outline" onclick="logout()">Sair do Painel</button>
+            </header>
 
-<div class="pizza">
-<h3>Frango com Catupiry</h3>
-<select id="size2">
-<option value="32">Pequena - 32</option>
-<option value="42">Média - 42</option>
-<option value="52">Grande - 52</option>
-</select>
-<input type="number" id="qty2" value="1" min="1">
-<button onclick="addToCart('Frango','size2','qty2')">Adicionar</button>
-</div>
+            <div class="stats-bar">
+                <div class="stat-item"><small>PEDIDOS ATIVOS</small><h2 id="statPedidos">0</h2></div>
+                <div class="stat-item"><small>TOTAL HOJE</small><h2 id="statFaturamento">R$ 0</h2></div>
+            </div>
 
-</div>
+            <div class="card">
+                <h3>📦 Pedidos em Aberto</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Pagamento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminPedidosTabela"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="card">
-<h2>🛒 Carrinho</h2>
-<div id="cart"></div>
-<div class="total">Total: R$ <span id="total">0</span></div>
-<button onclick="abrirFinalizacao()">Finalizar Pedido</button>
-<button onclick="logout()">Sair</button>
-</div>
-</div>
+    <div id="modalCheckout" class="modal hidden">
+        <div class="modal-content">
+            <h3>Finalizar Pedido</h3>
+            <input type="text" id="end" placeholder="Endereço de Entrega">
+            <select id="pagamento" onchange="togglePix()">
+                <option value="Cartão">Cartão (Na entrega)</option>
+                <option value="Pix">Pix (Pagar agora)</option>
+                <option value="Dinheiro">Dinheiro</option>
+            </select>
+            <div id="pixAviso" class="hidden" style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--info);">
+                <small>Chave CNPJ: 12.345.678/0001-99</small><br>
+                <input type="file" id="pixImg" accept="image/*" style="font-size: 0.8rem;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="document.getElementById('modalCheckout').classList.add('hidden')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmarPedido()">Enviar Pedido</button>
+            </div>
+        </div>
+    </div>
 
-<!-- FINALIZAÇÃO PEDIDO -->
-<div id="finalizacao" class="hidden card">
-<h3>Finalizar Pedido</h3>
-<input type="text" id="nome" placeholder="Nome">
-<input type="text" id="telefone" placeholder="Telefone">
-<input type="text" id="endereco" placeholder="Endereço">
-<textarea id="obs" placeholder="Observação"></textarea>
-<select id="pagamento" onchange="mostrarPix()">
-<option value="">Forma de pagamento</option>
-<option value="Pix">Pix</option>
-<option value="Cartão">Cartão</option>
-<option value="Dinheiro">Dinheiro</option>
-</select>
-
-<div id="pixDiv" class="hidden pix-info">
-<p>Chave Pix: <strong>12345678900</strong></p>
-<input type="file" id="pixComprovante" accept="image/*">
-<p style="font-size:12px;">Envie o comprovante para finalizar o pedido.</p>
-</div>
-
-<button onclick="confirmarPedido()">Confirmar Pedido</button>
-</div>
-
-<!-- ADMIN -->
-<div id="adminArea" class="hidden container">
-<div class="card">
-<h2>Painel de Pedidos do Dia</h2>
-<div id="listaPedidos"></div>
-<button onclick="logout()">Sair</button>
-</div>
-</div>
+    <div id="modalVerPix" class="modal hidden">
+        <div class="modal-content">
+            <h3>Comprovante Recebido</h3>
+            <img id="imgComprovante" src="" style="width: 100%; margin: 15px 0; border-radius: 8px;">
+            <button class="btn btn-primary" style="width: 100%;" onclick="document.getElementById('modalVerPix').classList.add('hidden')">Fechar</button>
+        </div>
+    </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, where, orderBy, onSnapshot, Timestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// 🔥 Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyBYZdGJ4w8ZpTcksVaZmEGuK0I6gt_b3jk",
-    authDomain: "pizzariaapp-44dec.firebaseapp.com",
-    projectId: "pizzariaapp-44dec",
-    storageBucket: "pizzariaapp-44dec.firebasestorage.app",
-    messagingSenderId: "684388458766",
-    appId: "1:684388458766:web:0181eee4647e02a277f75f",
-    measurementId: "G-DV8XJX072V"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyBYZdGJ4w8ZpTcksVaZmEGuK0I6gt_b3jk",
+        authDomain: "pizzariaapp-44dec.firebaseapp.com",
+        projectId: "pizzariaapp-44dec",
+        storageBucket: "pizzariaapp-44dec.firebasestorage.app",
+        messagingSenderId: "684388458766",
+        appId: "1:684388458766:web:0181eee4647e02a277f75f"
+    };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-const admins = ["gabriel.96052@aluno.iffar.edu.br","admin2@email.com"];
-let cart = [];
-let total = 0;
+    const admins = ["gabriel.96052@aluno.iffar.edu.br"];
+    let cart = [];
 
-window.toggleForm = function(){
-  document.getElementById("loginForm").classList.toggle("hidden");
-  document.getElementById("signupForm").classList.toggle("hidden");
-}
+    // --- LOGIN ---
+    window.loginEmail = async () => {
+        const email = document.getElementById("email").value;
+        const senha = document.getElementById("senha").value;
+        try { await signInWithEmailAndPassword(auth, email, senha); } catch(e) { alert("Erro: " + e.message); }
+    }
 
-window.signupEmail = async function(){
-  const email = document.getElementById("emailSignup").value;
-  const senha = document.getElementById("senhaSignup").value;
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth,email,senha);
-    alert("Conta criada com sucesso!");
-    verificarAdmin(userCredential.user.email);
-  }catch(e){alert(e.message);}
-}
+    window.logout = () => signOut(auth).then(() => location.reload());
 
-window.loginEmail = async function(){
-  const email = document.getElementById("email").value;
-  const senha = document.getElementById("senha").value;
-  try{
-    const userCredential = await signInWithEmailAndPassword(auth,email,senha);
-    alert("Login realizado!");
-    verificarAdmin(userCredential.user.email);
-  }catch(e){
-    if(e.code==="auth/user-not-found"){
-      alert("Usuário não encontrado! Cadastre-se ou use Google.");
-    } else { alert(e.message);}
-  }
-}
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById("loginBox").classList.add("hidden");
+            if (admins.includes(user.email)) {
+                document.getElementById("adminArea").classList.remove("hidden");
+                escutarPedidosAdmin();
+            } else {
+                document.getElementById("clienteArea").classList.remove("hidden");
+                document.getElementById("userName").innerText = user.email.split('@')[0];
+                escutarPedidosCliente(user.email);
+            }
+        }
+    });
 
-window.loginGoogle = async function(){
-  try{
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    alert("Login Google realizado!");
-    verificarAdmin(user.email);
-  }catch(e){alert(e.message);}
-}
+    // --- CARRINHO CLIENTE ---
+    window.addToCart = (nome, sizeId) => {
+        const preco = parseFloat(document.getElementById(sizeId).value);
+        cart.push({ nome, preco });
+        renderCart();
+    }
 
-window.verificarAdmin = function(email){
-  document.getElementById("loginBox").classList.add("hidden");
-  if(admins.includes(email)){
-    document.getElementById("adminArea").classList.remove("hidden");
-    carregarPedidos();
-  } else {
-    document.getElementById("clienteArea").classList.remove("hidden");
-  }
-}
+    function renderCart() {
+        const cont = document.getElementById("cartContent");
+        const totalSpan = document.getElementById("cartTotal");
+        cont.innerHTML = "";
+        let total = 0;
+        cart.forEach((item, index) => {
+            total += item.preco;
+            cont.innerHTML += `<div style="font-size:0.9rem; margin-bottom:5px;">${item.nome} - R$ ${item.preco}</div>`;
+        });
+        totalSpan.innerText = `R$ ${total.toFixed(2)}`;
+    }
 
-onAuthStateChanged(auth,(user)=>{ if(user){ verificarAdmin(user.email); } });
-window.logout = function(){ signOut(auth); location.reload(); }
+    window.abrirCheckout = () => {
+        if(cart.length === 0) return alert("Carrinho vazio!");
+        document.getElementById("modalCheckout").classList.remove("hidden");
+    }
 
-window.addToCart = function(nome,sizeId,qtyId){
-  let price = parseFloat(document.getElementById(sizeId).value);
-  let qty = parseInt(document.getElementById(qtyId).value);
-  let subtotal = price * qty;
-  cart.push({nome,qty,subtotal});
-  updateCart();
-}
+    window.togglePix = () => {
+        const isPix = document.getElementById("pagamento").value === "Pix";
+        document.getElementById("pixAviso").classList.toggle("hidden", !isPix);
+    }
 
-function updateCart(){
-  const cartDiv = document.getElementById("cart");
-  cartDiv.innerHTML="";
-  total=0;
-  cart.forEach(item=>{
-    total+=item.subtotal;
-    cartDiv.innerHTML += `<div class="cart-item">${item.nome} - ${item.qty}x - R$ ${item.subtotal}</div>`;
-  });
-  document.getElementById("total").innerText = total;
-}
+    window.confirmarPedido = async () => {
+        const endereco = document.getElementById("end").value;
+        const pagamento = document.getElementById("pagamento").value;
+        if(!endereco) return alert("Digite o endereço!");
 
-window.abrirFinalizacao = function(){
-  if(cart.length===0){alert("Carrinho vazio"); return;}
-  document.getElementById("finalizacao").classList.remove("hidden");
-}
+        const pedido = {
+            clienteEmail: auth.currentUser.email,
+            itens: cart,
+            total: cart.reduce((acc, i) => acc + i.preco, 0),
+            pagamento: pagamento,
+            status: pagamento === "Pix" ? "Aguardando Confirmação" : "Pendente",
+            data: Timestamp.now(),
+            arquivado: false
+        };
 
-window.mostrarPix = function(){
-  const pagamento = document.getElementById("pagamento").value;
-  const pixDiv = document.getElementById("pixDiv");
-  pixDiv.classList.add("hidden");
-  if(pagamento==="Pix") pixDiv.classList.remove("hidden");
-}
+        await addDoc(collection(db, "pedidos"), pedido);
+        alert("Pedido enviado com sucesso!");
+        cart = []; renderCart();
+        document.getElementById("modalCheckout").classList.add("hidden");
+    }
 
-window.confirmarPedido = async function(){
-  const pagamento = document.getElementById("pagamento").value;
-  if(pagamento==="Pix"){
-    const comprovante = document.getElementById("pixComprovante").files[0];
-    if(!comprovante){ alert("Envie o comprovante Pix antes de finalizar."); return; }
-  }
+    // --- LISTA CLIENTE (REAL-TIME) ---
+    function escutarPedidosCliente(email) {
+        const q = query(collection(db, "pedidos"), where("clienteEmail", "==", email), orderBy("data", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const lista = document.getElementById("meusPedidosLista");
+            lista.innerHTML = "";
+            snapshot.forEach(docSnap => {
+                const p = docSnap.data();
+                const id = docSnap.id;
+                const badgeClass = p.status === "Entregue" ? "bg-success" : "bg-warning";
+                
+                lista.innerHTML += `
+                    <div class="card" style="background:#0f172a; border: 1px solid #334155;">
+                        <div style="display:flex; justify-content:space-between">
+                            <small>${p.data.toDate().toLocaleDateString()}</small>
+                            <span class="badge ${badgeClass}">${p.status}</span>
+                        </div>
+                        <p style="margin:5px 0">${p.itens.length} itens - R$ ${p.total}</p>
+                        ${p.status === "Saiu para entrega" ? 
+                            `<button class="btn btn-success btn-sm" onclick="mudarStatus('${id}', 'Entregue')">Confirmar Recebimento</button>` : ""}
+                    </div>
+                `;
+            });
+        });
+    }
 
-  const pedido = {
-    clienteEmail: auth.currentUser.email,
-    nome: document.getElementById("nome").value,
-    telefone: document.getElementById("telefone").value,
-    endereco: document.getElementById("endereco").value,
-    obs: document.getElementById("obs").value,
-    pagamento: pagamento,
-    itens: cart,
-    total: total,
-    status: pagamento==="Pix"?"Aguardando Pix":"Recebido",
-    data: Timestamp.now()
-  };
-  await addDoc(collection(db,"pedidos"),pedido);
-  alert("Pedido enviado!");
-  cart=[]; updateCart();
-  document.getElementById("finalizacao").classList.add("hidden");
-}
+    // --- ADMIN (REAL-TIME) ---
+    function escutarPedidosAdmin() {
+        const q = query(collection(db, "pedidos"), where("arquivado", "==", false), orderBy("data", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const tabela = document.getElementById("adminPedidosTabela");
+            tabela.innerHTML = "";
+            let faturamento = 0;
+            let ativos = 0;
 
-async function carregarPedidos(){
-  const lista = document.getElementById("listaPedidos");
-  lista.innerHTML = "";
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
-  const q = query(collection(db,"pedidos"), orderBy("data","desc"));
-  const querySnapshot = await getDocs(q);
-  querySnapshot.forEach((docSnap)=>{
-    const p = docSnap.data();
-    const docId = docSnap.id;
-    lista.innerHTML += `
-    <div class="admin-pedido">
-      <strong>${p.nome}</strong><br>
-      Email: ${p.clienteEmail}<br>
-      Telefone: ${p.telefone}<br>
-      Endereço: ${p.endereco}<br>
-      Pagamento: ${p.pagamento}<br>
-      Total: R$ ${p.total}<br>
-      Status: <span id="status-${docId}">${p.status}</span><br>
-      ${p.pagamento==="Pix"?`<button onclick="confirmPix('${docId}')">Confirmar Pix</button>`:""}
-      <button onclick="mudarStatus('${docId}','Em preparo')">Em preparo</button>
-      <button onclick="mudarStatus('${docId}','Saiu para entrega')">Saiu para entrega</button>
-      <button onclick="mudarStatus('${docId}','Entregue')">Entregue</button>
-    </div>`;
-  });
-}
+            snapshot.forEach(docSnap => {
+                const p = docSnap.data();
+                const id = docSnap.id;
+                ativos++;
+                faturamento += p.total;
 
-window.mudarStatus = async function(docId,status){
-  await updateDoc(doc(db,"pedidos",docId),{status: status});
-  document.getElementById("status-"+docId).innerText = status;
-}
+                tabela.innerHTML += `
+                    <tr>
+                        <td><small>${p.clienteEmail}</small></td>
+                        <td><span class="badge bg-info">${p.status}</span></td>
+                        <td>R$ ${p.total}</td>
+                        <td>${p.pagamento}</td>
+                        <td>
+                            <button class="btn btn-outline btn-sm" onclick="mudarStatus('${id}', 'Em preparo')">♨️</button>
+                            <button class="btn btn-outline btn-sm" onclick="mudarStatus('${id}', 'Saiu para entrega')">🚚</button>
+                            <button class="btn btn-success btn-sm" onclick="arquivar('${id}')">📂 Finalizar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById("statPedidos").innerText = ativos;
+            document.getElementById("statFaturamento").innerText = `R$ ${faturamento.toFixed(2)}`;
+        });
+    }
 
-// Confirmar pagamento Pix
-window.confirmPix = async function(docId){
-  await updateDoc(doc(db,"pedidos",docId),{status:"Recebido"});
-  document.getElementById("status-"+docId).innerText = "Recebido";
-  alert("Pagamento Pix confirmado!");
-}
+    window.mudarStatus = async (id, status) => {
+        await updateDoc(doc(db, "pedidos", id), { status });
+    }
+
+    window.arquivar = async (id) => {
+        if(confirm("Deseja arquivar este pedido? Ele sairá da tela principal.")) {
+            await updateDoc(doc(db, "pedidos", id), { arquivado: true });
+        }
+    }
 
 </script>
 </body>
