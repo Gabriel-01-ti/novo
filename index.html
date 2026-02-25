@@ -127,6 +127,7 @@ const firebaseConfig = {
     measurementId: "G-DV8XJX072V"
   };
 
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -140,13 +141,13 @@ let cart = [];
 let total = 0;
 
 // 🔹 Toggle login / signup
-function toggleForm(){
+window.toggleForm = function(){
   document.getElementById("loginForm").classList.toggle("hidden");
   document.getElementById("signupForm").classList.toggle("hidden");
 }
 
 // 🔹 Signup email
-async function signupEmail(){
+window.signupEmail = async function(){
   const email = document.getElementById("emailSignup").value;
   const senha = document.getElementById("senhaSignup").value;
   try{
@@ -157,7 +158,7 @@ async function signupEmail(){
 }
 
 // 🔹 Login email
-async function loginEmail(){
+window.loginEmail = async function(){
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
   try{
@@ -174,7 +175,7 @@ async function loginEmail(){
 }
 
 // 🔹 Login Google
-async function loginGoogle(){
+window.loginGoogle = async function(){
   try{
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
@@ -184,7 +185,7 @@ async function loginGoogle(){
 }
 
 // 🔹 Verifica admin ou cliente
-function verificarAdmin(email){
+window.verificarAdmin = function(email){
   document.getElementById("loginBox").classList.add("hidden");
   if(admins.includes(email)){
     document.getElementById("adminArea").classList.remove("hidden");
@@ -200,16 +201,17 @@ onAuthStateChanged(auth,(user)=>{
 });
 
 // 🔹 Logout
-function logout(){ signOut(auth); location.reload(); }
+window.logout = function(){ signOut(auth); location.reload(); }
 
 // 🔹 Carrinho
-function addToCart(nome,sizeId,qtyId){
+window.addToCart = function(nome,sizeId,qtyId){
   let price = parseFloat(document.getElementById(sizeId).value);
   let qty = parseInt(document.getElementById(qtyId).value);
   let subtotal = price * qty;
   cart.push({nome,qty,subtotal});
   updateCart();
 }
+
 function updateCart(){
   const cartDiv = document.getElementById("cart");
   cartDiv.innerHTML="";
@@ -222,12 +224,12 @@ function updateCart(){
 }
 
 // 🔹 Finalizar pedido
-function abrirFinalizacao(){
+window.abrirFinalizacao = function(){
   if(cart.length===0){alert("Carrinho vazio"); return;}
   document.getElementById("finalizacao").classList.remove("hidden");
 }
 
-async function confirmarPedido(){
+window.confirmarPedido = async function(){
   const pedido = {
     clienteEmail: auth.currentUser.email,
     nome: document.getElementById("nome").value,
@@ -271,7 +273,7 @@ async function carregarPedidos(){
 }
 
 // 🔹 Mudar status
-async function mudarStatus(docId,status){
+window.mudarStatus = async function(docId,status){
   await updateDoc(doc(db,"pedidos",docId),{status: status});
   document.getElementById("status-"+docId).innerText = status;
 }
