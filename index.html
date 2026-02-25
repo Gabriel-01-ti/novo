@@ -10,7 +10,7 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family: Arial, sans-serif;
+  font-family:Arial, sans-serif;
 }
 
 body{
@@ -25,14 +25,14 @@ h1{
 
 .container{
   display:grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns:1fr 1fr;
   gap:20px;
 }
 
 .card{
   background:white;
   padding:15px;
-  border-radius:10px;
+  border-radius:12px;
   box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
@@ -44,7 +44,7 @@ h1{
 button{
   padding:8px 12px;
   border:none;
-  border-radius:6px;
+  border-radius:8px;
   cursor:pointer;
   background:#e63946;
   color:white;
@@ -55,10 +55,12 @@ button:hover{
   opacity:0.9;
 }
 
-select, input{
-  padding:6px;
+select,input,textarea{
+  padding:8px;
   margin:5px 0;
   width:100%;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
 
 .cart-item{
@@ -72,125 +74,204 @@ select, input{
   font-size:18px;
 }
 
+/* MODAL */
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-content{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:400px;
+}
+
+.close{
+  float:right;
+  cursor:pointer;
+  font-weight:bold;
+}
+
 @media(max-width:768px){
   .container{
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr;
   }
 }
 </style>
 </head>
-
 <body>
 
 <h1>🍕 Pizzaria Bella Massa</h1>
 
 <div class="container">
 
-  <!-- LISTA DE PIZZAS -->
-  <div class="card">
-    <h2>Cardápio</h2>
+<!-- CARDÁPIO -->
+<div class="card">
+<h2>Cardápio</h2>
 
-    <div class="pizza">
-      <h3>Calabresa</h3>
-      <p>Molho, mussarela, calabresa, cebola</p>
-      <p>Base: R$ 30</p>
+<div class="pizza">
+<h3>Calabresa</h3>
+<p>Molho, mussarela, calabresa, cebola</p>
 
-      <select id="size1">
-        <option value="30">Pequena</option>
-        <option value="40">Média</option>
-        <option value="50">Grande</option>
-      </select>
+<select id="size1">
+<option value="30">Pequena - R$30</option>
+<option value="40">Média - R$40</option>
+<option value="50">Grande - R$50</option>
+</select>
 
-      <input type="number" id="qty1" min="1" value="1">
+<input type="number" id="qty1" min="1" value="1">
 
-      <button onclick="addToCart('Calabresa', 'size1', 'qty1')">
-        Adicionar
-      </button>
-    </div>
+<button onclick="addToCart('Calabresa','size1','qty1')">Adicionar</button>
+</div>
 
-    <div class="pizza">
-      <h3>Frango com Catupiry</h3>
-      <p>Molho, mussarela, frango, catupiry</p>
-      <p>Base: R$ 32</p>
+<div class="pizza">
+<h3>Frango com Catupiry</h3>
+<p>Molho, mussarela, frango, catupiry</p>
 
-      <select id="size2">
-        <option value="32">Pequena</option>
-        <option value="42">Média</option>
-        <option value="52">Grande</option>
-      </select>
+<select id="size2">
+<option value="32">Pequena - R$32</option>
+<option value="42">Média - R$42</option>
+<option value="52">Grande - R$52</option>
+</select>
 
-      <input type="number" id="qty2" min="1" value="1">
+<input type="number" id="qty2" min="1" value="1">
 
-      <button onclick="addToCart('Frango com Catupiry', 'size2', 'qty2')">
-        Adicionar
-      </button>
-    </div>
+<button onclick="addToCart('Frango com Catupiry','size2','qty2')">Adicionar</button>
+</div>
 
-  </div>
+</div>
 
-  <!-- CARRINHO -->
-  <div class="card">
-    <h2>🛒 Carrinho</h2>
+<!-- CARRINHO -->
+<div class="card">
+<h2>🛒 Carrinho</h2>
 
-    <div id="cart"></div>
+<div id="cart"></div>
 
-    <div class="total">
-      Total: R$ <span id="total">0</span>
-    </div>
+<div class="total">
+Total: R$ <span id="total">0.00</span>
+</div>
 
-    <button onclick="finalizarPedido()">Finalizar Pedido</button>
-  </div>
+<button onclick="abrirModal()">Finalizar Pedido</button>
 
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-content">
+
+<span class="close" onclick="fecharModal()">X</span>
+
+<h3>Finalizar Pedido</h3>
+
+<input type="text" id="nome" placeholder="Seu Nome" required>
+<input type="text" id="telefone" placeholder="Telefone" required>
+<input type="text" id="endereco" placeholder="Endereço Completo" required>
+<textarea id="obs" placeholder="Observação (opcional)"></textarea>
+
+<select id="pagamento" onchange="verificarPagamento()">
+<option value="">Forma de Pagamento</option>
+<option value="Pix">Pix</option>
+<option value="Cartão">Cartão</option>
+<option value="Dinheiro">Dinheiro</option>
+</select>
+
+<div id="pixArea" style="display:none;">
+<p>Chave Pix: pizzaria@pix.com</p>
+<input type="file" id="comprovante">
+</div>
+
+<button onclick="confirmarPedido()">Confirmar Pedido</button>
+
+</div>
 </div>
 
 <script>
 let cart = [];
 let total = 0;
 
-function addToCart(nome, sizeId, qtyId){
-  let price = parseFloat(document.getElementById(sizeId).value);
-  let quantity = parseInt(document.getElementById(qtyId).value);
+function addToCart(nome,sizeId,qtyId){
+let price = parseFloat(document.getElementById(sizeId).value);
+let quantity = parseInt(document.getElementById(qtyId).value);
 
-  let subtotal = price * quantity;
+let subtotal = price * quantity;
 
-  cart.push({
-    nome,
-    price,
-    quantity,
-    subtotal
-  });
-
-  updateCart();
+cart.push({nome,price,quantity,subtotal});
+updateCart();
 }
 
 function updateCart(){
-  let cartDiv = document.getElementById("cart");
-  cartDiv.innerHTML = "";
-  total = 0;
+let cartDiv = document.getElementById("cart");
+cartDiv.innerHTML="";
+total=0;
 
-  cart.forEach((item)=>{
-    total += item.subtotal;
+cart.forEach(item=>{
+total+=item.subtotal;
 
-    cartDiv.innerHTML += `
-      <div class="cart-item">
-        ${item.nome} - ${item.quantity}x  
-        R$ ${item.subtotal.toFixed(2)}
-      </div>
-    `;
-  });
+cartDiv.innerHTML+=`
+<div class="cart-item">
+${item.nome} - ${item.quantity}x  
+R$ ${item.subtotal.toFixed(2)}
+</div>
+`;
+});
 
-  document.getElementById("total").innerText = total.toFixed(2);
+document.getElementById("total").innerText=total.toFixed(2);
 }
 
-function finalizarPedido(){
-  if(cart.length === 0){
-    alert("Seu carrinho está vazio!");
-    return;
-  }
+function abrirModal(){
+if(cart.length===0){
+alert("Carrinho vazio!");
+return;
+}
+document.getElementById("modal").style.display="flex";
+}
 
-  alert("Pedido realizado com sucesso! Total: R$ " + total.toFixed(2));
-  cart = [];
-  updateCart();
+function fecharModal(){
+document.getElementById("modal").style.display="none";
+}
+
+function verificarPagamento(){
+let pagamento = document.getElementById("pagamento").value;
+document.getElementById("pixArea").style.display = 
+pagamento==="Pix" ? "block" : "none";
+}
+
+function confirmarPedido(){
+let nome = document.getElementById("nome").value;
+let telefone = document.getElementById("telefone").value;
+let endereco = document.getElementById("endereco").value;
+let pagamento = document.getElementById("pagamento").value;
+
+if(!nome || !telefone || !endereco || !pagamento){
+alert("Preencha todos os campos obrigatórios!");
+return;
+}
+
+alert(
+`Pedido Confirmado!
+
+Cliente: ${nome}
+Telefone: ${telefone}
+Endereço: ${endereco}
+Pagamento: ${pagamento}
+Total: R$ ${total.toFixed(2)}
+
+Pagamento será realizado na entrega.`
+);
+
+cart=[];
+updateCart();
+fecharModal();
 }
 </script>
 
