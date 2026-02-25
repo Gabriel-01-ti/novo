@@ -8,51 +8,17 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
 body{background:#f5f5f5;padding:20px;}
 h1{text-align:center;margin-bottom:20px;}
-
 .hidden{display:none;}
 .container{max-width:1000px;margin:auto;}
-
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-margin-bottom:20px;
-}
-
-button{
-padding:8px 12px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-background:#e63946;
-color:white;
-margin-top:5px;
-}
-
-input,select,textarea{
-width:100%;
-padding:8px;
-margin:6px 0;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
+.card{background:white;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);margin-bottom:20px;}
+button{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;background:#e63946;color:white;margin-top:5px;}
+input,select,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ccc;}
 .pizza{border-bottom:1px solid #eee;padding:10px 0;}
 .cart-item{border-bottom:1px solid #ddd;padding:8px 0;}
 .total{font-weight:bold;margin-top:10px;}
-
-.admin-pedido{
-border:1px solid #ddd;
-padding:10px;
-border-radius:8px;
-margin-bottom:10px;
-background:#fafafa;
-}
-
-#loginBox button.google{
-background:#4285f4;
-}
+.admin-pedido{border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:10px;background:#fafafa;}
+#loginBox button.google{background:#4285f4;}
+.toggle-link{color:#e63946;cursor:pointer;text-decoration:underline;margin-top:10px;display:inline-block;}
 </style>
 </head>
 <body>
@@ -61,11 +27,25 @@ background:#4285f4;
 
 <!-- LOGIN / CADASTRO -->
 <div id="loginBox" class="card">
-<h2>Login / Cadastro</h2>
+<h2 id="loginTitle">Login</h2>
+
+<div id="loginForm">
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="senha" placeholder="Senha">
-<button onclick="loginEmail()">Entrar / Criar Conta</button>
+<button onclick="loginEmail()">Entrar</button>
+<p>ou</p>
 <button class="google" onclick="loginGoogle()">Entrar com Google</button>
+<p class="toggle-link" onclick="toggleForm()">Não tem conta? Cadastre-se</p>
+</div>
+
+<div id="signupForm" class="hidden">
+<input type="email" id="emailSignup" placeholder="Email">
+<input type="password" id="senhaSignup" placeholder="Senha">
+<button onclick="signupEmail()">Criar Conta</button>
+<p>ou</p>
+<button class="google" onclick="loginGoogle()">Continuar com Google</button>
+<p class="toggle-link" onclick="toggleForm()">Já tem conta? Faça login</p>
+</div>
 </div>
 
 <!-- CLIENTE -->
@@ -138,46 +118,62 @@ import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, order
 
 // 🔥 Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyBYZdGJ4w8ZpTcksVaZmEGuK0I6gt_b3jk",
-  authDomain: "pizzariaapp-44dec.firebaseapp.com",
-  projectId: "pizzariaapp-44dec",
-  storageBucket: "pizzariaapp-44dec.firebasestorage.app",
-  messagingSenderId: "684388458766",
-  appId: "1:684388458766:web:0181eee4647e02a277f75f"
-};
+    apiKey: "AIzaSyBYZdGJ4w8ZpTcksVaZmEGuK0I6gt_b3jk",
+    authDomain: "pizzariaapp-44dec.firebaseapp.com",
+    projectId: "pizzariaapp-44dec",
+    storageBucket: "pizzariaapp-44dec.firebasestorage.app",
+    messagingSenderId: "684388458766",
+    appId: "1:684388458766:web:0181eee4647e02a277f75f",
+    measurementId: "G-DV8XJX072V"
+  };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// 🔥 Admin fixo
+// Admin fixo
 const admins = ["gabriel.96052@aluno.iffar.edu.br","admin2@email.com"];
 
-// 🛒 Carrinho
+// Carrinho
 let cart = [];
 let total = 0;
 
-// LOGIN / CADASTRO EMAIL
+// 🔹 Toggle login / signup
+function toggleForm(){
+  document.getElementById("loginForm").classList.toggle("hidden");
+  document.getElementById("signupForm").classList.toggle("hidden");
+}
+
+// 🔹 Signup email
+async function signupEmail(){
+  const email = document.getElementById("emailSignup").value;
+  const senha = document.getElementById("senhaSignup").value;
+  try{
+    const userCredential = await createUserWithEmailAndPassword(auth,email,senha);
+    alert("Conta criada com sucesso!");
+    verificarAdmin(userCredential.user.email);
+  }catch(e){alert(e.message);}
+}
+
+// 🔹 Login email
 async function loginEmail(){
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
   try{
-    const userCredential = await createUserWithEmailAndPassword(auth,email,senha);
-    alert("Conta criada e logado!");
+    const userCredential = await signInWithEmailAndPassword(auth,email,senha);
+    alert("Login realizado!");
     verificarAdmin(userCredential.user.email);
   }catch(e){
-    if(e.code === "auth/email-already-in-use" || e.code==="auth/wrong-password"){
-      const userCredential = await signInWithEmailAndPassword(auth,email,senha);
-      alert("Login realizado!");
-      verificarAdmin(userCredential.user.email);
-    }else{
+    if(e.code==="auth/user-not-found"){
+      alert("Usuário não encontrado! Cadastre-se ou use Google.");
+    } else {
       alert(e.message);
     }
   }
 }
 
-// LOGIN GOOGLE
+// 🔹 Login Google
 async function loginGoogle(){
   try{
     const result = await signInWithPopup(auth, provider);
@@ -187,7 +183,7 @@ async function loginGoogle(){
   }catch(e){alert(e.message);}
 }
 
-// VERIFICAR ADMIN
+// 🔹 Verifica admin ou cliente
 function verificarAdmin(email){
   document.getElementById("loginBox").classList.add("hidden");
   if(admins.includes(email)){
@@ -198,10 +194,15 @@ function verificarAdmin(email){
   }
 }
 
-// LOGOUT
+// 🔹 OnAuthStateChanged para manter login
+onAuthStateChanged(auth,(user)=>{
+  if(user){ verificarAdmin(user.email); }
+});
+
+// 🔹 Logout
 function logout(){ signOut(auth); location.reload(); }
 
-// CARRINHO
+// 🔹 Carrinho
 function addToCart(nome,sizeId,qtyId){
   let price = parseFloat(document.getElementById(sizeId).value);
   let qty = parseInt(document.getElementById(qtyId).value);
@@ -209,7 +210,6 @@ function addToCart(nome,sizeId,qtyId){
   cart.push({nome,qty,subtotal});
   updateCart();
 }
-
 function updateCart(){
   const cartDiv = document.getElementById("cart");
   cartDiv.innerHTML="";
@@ -221,7 +221,7 @@ function updateCart(){
   document.getElementById("total").innerText = total;
 }
 
-// FINALIZAR PEDIDO
+// 🔹 Finalizar pedido
 function abrirFinalizacao(){
   if(cart.length===0){alert("Carrinho vazio"); return;}
   document.getElementById("finalizacao").classList.remove("hidden");
@@ -246,7 +246,7 @@ async function confirmarPedido(){
   document.getElementById("finalizacao").classList.add("hidden");
 }
 
-// ADMIN
+// 🔹 Admin
 async function carregarPedidos(){
   const lista = document.getElementById("listaPedidos");
   lista.innerHTML = "";
@@ -270,7 +270,7 @@ async function carregarPedidos(){
   });
 }
 
-// MUDAR STATUS
+// 🔹 Mudar status
 async function mudarStatus(docId,status){
   await updateDoc(doc(db,"pedidos",docId),{status: status});
   document.getElementById("status-"+docId).innerText = status;
