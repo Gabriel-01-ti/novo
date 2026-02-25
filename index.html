@@ -1,26 +1,198 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Sobre - Diagnóstico Agrícola</title>
-  <link rel="stylesheet" href="style.css">
-  <meta name="description" content="Saiba mais sobre o projeto Diagnóstico Agrícola.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizzaria Bella Massa</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Arial, sans-serif;
+}
+
+body{
+  background:#f5f5f5;
+  padding:20px;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.container{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:20px;
+}
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.pizza{
+  border-bottom:1px solid #eee;
+  padding:10px 0;
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#e63946;
+  color:white;
+  margin-top:5px;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+select, input{
+  padding:6px;
+  margin:5px 0;
+  width:100%;
+}
+
+.cart-item{
+  border-bottom:1px solid #ddd;
+  padding:8px 0;
+}
+
+.total{
+  font-weight:bold;
+  margin-top:10px;
+  font-size:18px;
+}
+
+@media(max-width:768px){
+  .container{
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>Sobre o Projeto 🌱</h1>
 
-    <p>
-      Este site foi criado para ajudar agricultores a identificar pragas e doenças nas lavouras 
-      de forma rápida e simples. Nosso objetivo é fornecer um diagnóstico inicial e indicar 
-      medidas de manejo adequadas.
-    </p>
+<h1>🍕 Pizzaria Bella Massa</h1>
 
-    <p>
-      Os dados foram coletados de fontes confiáveis e adaptados para uso prático no campo.
-    </p>
+<div class="container">
 
-    <a href="sobre.html" style="display:inline-block; margin-top:50px;">fazer diagnostico</a>
+  <!-- LISTA DE PIZZAS -->
+  <div class="card">
+    <h2>Cardápio</h2>
+
+    <div class="pizza">
+      <h3>Calabresa</h3>
+      <p>Molho, mussarela, calabresa, cebola</p>
+      <p>Base: R$ 30</p>
+
+      <select id="size1">
+        <option value="30">Pequena</option>
+        <option value="40">Média</option>
+        <option value="50">Grande</option>
+      </select>
+
+      <input type="number" id="qty1" min="1" value="1">
+
+      <button onclick="addToCart('Calabresa', 'size1', 'qty1')">
+        Adicionar
+      </button>
+    </div>
+
+    <div class="pizza">
+      <h3>Frango com Catupiry</h3>
+      <p>Molho, mussarela, frango, catupiry</p>
+      <p>Base: R$ 32</p>
+
+      <select id="size2">
+        <option value="32">Pequena</option>
+        <option value="42">Média</option>
+        <option value="52">Grande</option>
+      </select>
+
+      <input type="number" id="qty2" min="1" value="1">
+
+      <button onclick="addToCart('Frango com Catupiry', 'size2', 'qty2')">
+        Adicionar
+      </button>
+    </div>
+
   </div>
+
+  <!-- CARRINHO -->
+  <div class="card">
+    <h2>🛒 Carrinho</h2>
+
+    <div id="cart"></div>
+
+    <div class="total">
+      Total: R$ <span id="total">0</span>
+    </div>
+
+    <button onclick="finalizarPedido()">Finalizar Pedido</button>
+  </div>
+
+</div>
+
+<script>
+let cart = [];
+let total = 0;
+
+function addToCart(nome, sizeId, qtyId){
+  let price = parseFloat(document.getElementById(sizeId).value);
+  let quantity = parseInt(document.getElementById(qtyId).value);
+
+  let subtotal = price * quantity;
+
+  cart.push({
+    nome,
+    price,
+    quantity,
+    subtotal
+  });
+
+  updateCart();
+}
+
+function updateCart(){
+  let cartDiv = document.getElementById("cart");
+  cartDiv.innerHTML = "";
+  total = 0;
+
+  cart.forEach((item)=>{
+    total += item.subtotal;
+
+    cartDiv.innerHTML += `
+      <div class="cart-item">
+        ${item.nome} - ${item.quantity}x  
+        R$ ${item.subtotal.toFixed(2)}
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText = total.toFixed(2);
+}
+
+function finalizarPedido(){
+  if(cart.length === 0){
+    alert("Seu carrinho está vazio!");
+    return;
+  }
+
+  alert("Pedido realizado com sucesso! Total: R$ " + total.toFixed(2));
+  cart = [];
+  updateCart();
+}
+</script>
+
 </body>
 </html>
