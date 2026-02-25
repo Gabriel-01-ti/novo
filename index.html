@@ -10,14 +10,47 @@
 body{background:#f5f5f5;padding:20px;}
 h1{text-align:center;margin-bottom:20px;}
 
-.container{max-width:400px;margin:auto;background:white;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
-input,select,button{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;}
-button{background:#e63946;color:white;border:none;cursor:pointer;}
-button:hover{opacity:0.9;}
-.link{color:#e63946;cursor:pointer;text-align:center;margin-top:10px;}
-
 .hidden{display:none;}
-.admin-area, .cliente-area{margin-top:20px;}
+
+.container{max-width:1000px;margin:auto;}
+
+.card{
+background:white;
+padding:15px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+margin-bottom:20px;
+}
+
+button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+background:#e63946;
+color:white;
+margin-top:5px;
+}
+
+input,select,textarea{
+width:100%;
+padding:8px;
+margin:6px 0;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+.pizza{border-bottom:1px solid #eee;padding:10px 0;}
+.cart-item{border-bottom:1px solid #ddd;padding:8px 0;}
+.total{font-weight:bold;margin-top:10px;}
+
+.admin-pedido{
+border:1px solid #ddd;
+padding:10px;
+border-radius:8px;
+margin-bottom:10px;
+background:#fafafa;
+}
 </style>
 </head>
 <body>
@@ -25,112 +58,197 @@ button:hover{opacity:0.9;}
 <h1>🍕 Bella Massa</h1>
 
 <!-- LOGIN -->
-<div class="container" id="loginBox">
+<div id="loginArea" class="card">
 <h2>Login</h2>
-<input type="email" id="loginEmail" placeholder="Email">
-<input type="password" id="loginSenha" placeholder="Senha">
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="senha" placeholder="Senha">
 <button onclick="login()">Entrar</button>
-<div class="link" onclick="mostrarCadastro()">Criar conta</div>
 </div>
 
-<!-- CADASTRO -->
-<div class="container hidden" id="cadastroBox">
-<h2>Criar Conta</h2>
-<input type="text" id="cadNome" placeholder="Nome">
-<input type="email" id="cadEmail" placeholder="Email">
-<input type="password" id="cadSenha" placeholder="Senha">
-<button onclick="cadastrar()">Cadastrar</button>
-<div class="link" onclick="mostrarLogin()">Voltar ao login</div>
+<!-- CLIENTE AREA -->
+<div id="clienteArea" class="hidden container">
+
+<div class="card">
+<h2>Cardápio</h2>
+
+<div class="pizza">
+<h3>Calabresa</h3>
+<select id="size1">
+<option value="30">Pequena - 30</option>
+<option value="40">Média - 40</option>
+<option value="50">Grande - 50</option>
+</select>
+<input type="number" id="qty1" value="1" min="1">
+<button onclick="addToCart('Calabresa','size1','qty1')">Adicionar</button>
 </div>
 
-<!-- AREA CLIENTE -->
-<div class="container hidden cliente-area" id="clienteArea">
-<h2>Área do Cliente</h2>
-<p id="clienteNome"></p>
+<div class="pizza">
+<h3>Frango com Catupiry</h3>
+<select id="size2">
+<option value="32">Pequena - 32</option>
+<option value="42">Média - 42</option>
+<option value="52">Grande - 52</option>
+</select>
+<input type="number" id="qty2" value="1" min="1">
+<button onclick="addToCart('Frango','size2','qty2')">Adicionar</button>
+</div>
+
+</div>
+
+<div class="card">
+<h2>🛒 Carrinho</h2>
+<div id="cart"></div>
+<div class="total">Total: R$ <span id="total">0</span></div>
+<button onclick="abrirFinalizacao()">Finalizar Pedido</button>
 <button onclick="logout()">Sair</button>
 </div>
 
-<!-- AREA ADMIN -->
-<div class="container hidden admin-area" id="adminArea">
-<h2>Painel Admin</h2>
-<p id="adminNome"></p>
+</div>
+
+<!-- FINALIZAÇÃO -->
+<div id="finalizacao" class="hidden card">
+<h3>Finalizar Pedido</h3>
+<input type="text" id="nome" placeholder="Nome">
+<input type="text" id="telefone" placeholder="Telefone">
+<input type="text" id="endereco" placeholder="Endereço">
+<textarea id="obs" placeholder="Observação"></textarea>
+
+<select id="pagamento" onchange="verificarPix()">
+<option value="">Forma de pagamento</option>
+<option value="Pix">Pix</option>
+<option value="Cartão">Cartão</option>
+<option value="Dinheiro">Dinheiro</option>
+</select>
+
+<div id="pixArea" class="hidden">
+<p>Chave Pix: pizzaria@pix.com</p>
+<input type="file" id="comprovante">
+</div>
+
+<button onclick="confirmarPedido()">Confirmar Pedido</button>
+</div>
+
+<!-- ADMIN AREA -->
+<div id="adminArea" class="hidden container">
+<div class="card">
+<h2>Painel de Pedidos</h2>
+<div id="listaPedidos"></div>
 <button onclick="logout()">Sair</button>
+</div>
 </div>
 
 <script>
 
 // ADMINS FIXOS
-const admins = [
-  {email:"gabriel.96052@aluno.iffar.edu.br", senha:"budaprog", tipo:"admin_principal", nome:"Admin Principal"},
-  {email:"dono@pizza.com", senha:"123456", tipo:"dono", nome:"Dono"},
-  {email:"gerente@pizza.com", senha:"123456", tipo:"admin", nome:"Gerente"}
+const admins=[
+{email:"gabriel.96052@aluno.iffar.edu.br",senha:"123456"},
+{email:"dono@pizza.com",senha:"123456"}
 ];
 
-// pegar usuários do localStorage
-let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+let cart=[];
+let total=0;
 
-function mostrarCadastro(){
-document.getElementById("loginBox").classList.add("hidden");
-document.getElementById("cadastroBox").classList.remove("hidden");
-}
+let pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
 
-function mostrarLogin(){
-document.getElementById("cadastroBox").classList.add("hidden");
-document.getElementById("loginBox").classList.remove("hidden");
-}
-
-function cadastrar(){
-let nome = cadNome.value;
-let email = cadEmail.value;
-let senha = cadSenha.value;
-
-if(!nome || !email || !senha){
-alert("Preencha tudo!");
-return;
-}
-
-usuarios.push({nome,email,senha,tipo:"cliente"});
-localStorage.setItem("usuarios",JSON.stringify(usuarios));
-
-alert("Conta criada!");
-mostrarLogin();
-}
-
+// LOGIN
 function login(){
-let email = loginEmail.value;
-let senha = loginSenha.value;
+let e=email.value;
+let s=senha.value;
 
-// verificar admin
-let admin = admins.find(a => a.email===email && a.senha===senha);
-if(admin){
-abrirAdmin(admin);
-return;
-}
+let isAdmin = admins.find(a=>a.email===e && a.senha===s);
 
-// verificar cliente
-let user = usuarios.find(u => u.email===email && u.senha===senha);
-if(user){
-abrirCliente(user);
-return;
-}
-
-alert("Login inválido!");
-}
-
-function abrirCliente(user){
-loginBox.classList.add("hidden");
-clienteArea.classList.remove("hidden");
-clienteNome.innerText = "Bem-vindo, " + user.nome;
-}
-
-function abrirAdmin(admin){
-loginBox.classList.add("hidden");
+if(isAdmin){
+loginArea.classList.add("hidden");
 adminArea.classList.remove("hidden");
-adminNome.innerText = "Logado como: " + admin.nome + " ("+admin.tipo+")";
+carregarPedidos();
+return;
 }
 
-function logout(){
-location.reload();
+loginArea.classList.add("hidden");
+clienteArea.classList.remove("hidden");
+}
+
+// LOGOUT
+function logout(){location.reload();}
+
+// CARRINHO
+function addToCart(nome,sizeId,qtyId){
+let price=parseFloat(document.getElementById(sizeId).value);
+let qty=parseInt(document.getElementById(qtyId).value);
+let subtotal=price*qty;
+
+cart.push({nome,qty,subtotal});
+updateCart();
+}
+
+function updateCart(){
+cartDiv.innerHTML="";
+total=0;
+
+cart.forEach(item=>{
+total+=item.subtotal;
+cartDiv.innerHTML+=`
+<div class="cart-item">
+${item.nome} - ${item.qty}x - R$ ${item.subtotal}
+</div>`;
+});
+
+document.getElementById("total").innerText=total;
+}
+
+// FINALIZAÇÃO
+function abrirFinalizacao(){
+if(cart.length===0){alert("Carrinho vazio");return;}
+finalizacao.classList.remove("hidden");
+}
+
+function verificarPix(){
+if(pagamento.value==="Pix"){
+pixArea.classList.remove("hidden");
+}else{
+pixArea.classList.add("hidden");
+}
+}
+
+function confirmarPedido(){
+
+let pedido={
+nome:nome.value,
+telefone:telefone.value,
+endereco:endereco.value,
+obs:obs.value,
+pagamento:pagamento.value,
+itens:cart,
+total:total,
+data:new Date().toLocaleString()
+};
+
+pedidos.push(pedido);
+localStorage.setItem("pedidos",JSON.stringify(pedidos));
+
+alert("Pedido enviado!");
+
+cart=[];
+updateCart();
+finalizacao.classList.add("hidden");
+}
+
+// ADMIN
+function carregarPedidos(){
+listaPedidos.innerHTML="";
+
+pedidos.forEach(p=>{
+listaPedidos.innerHTML+=`
+<div class="admin-pedido">
+<strong>${p.nome}</strong><br>
+Telefone: ${p.telefone}<br>
+Endereço: ${p.endereco}<br>
+Pagamento: ${p.pagamento}<br>
+Total: R$ ${p.total}<br>
+Data: ${p.data}
+</div>
+`;
+});
 }
 
 </script>
